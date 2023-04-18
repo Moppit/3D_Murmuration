@@ -28,12 +28,13 @@ to setup
   create-birds population
     [
       place-bird
-      set size 0.5
+      set size 0.75
       set velocity [ 0 0 0 ]
       set acceleration [ 0 0 0 ]
       set color yellow + 2 - random-float 6
       set flockmates no-turtles
     ]
+  ;; ask turtle 0 [ set color red ]
 
   ;; Create predator
   create-predators hawk
@@ -103,8 +104,6 @@ to flock  ;; bird procedure
   add-urge world-center-urge world-center-constant
   add-urge wander-urge wander-constant
   add-urge avoid-obstacle-urge avoidance-constant
-  ;; Avoid predator
-  add-urge avoid-predator-urge c-avoid
 
   ;; if I'm not in a flock ignore the flock related
   ;; urges
@@ -142,9 +141,6 @@ end
 to predator-fly  ;; predator procedure
   find-prey
 
-  ;; find prey
-  find-prey
-
   add-urge world-center-urge world-center-constant
   add-urge wander-urge wander-constant
   add-urge avoid-obstacle-urge avoidance-constant
@@ -152,13 +148,11 @@ to predator-fly  ;; predator procedure
   ;; if I'm not in a flock ignore the flock related
   ;; urges
   if count flockmates > 0
-
   [ ;;add-urge pred-spacing-urge spacing-constant
     add-urge center-urge center-constant
     add-urge pred-velocity-urge velocity-constant
     pred-find-flock-center
   ]
-
 
   ;; keep the acceleration within the accepted range
   if magnitude acceleration > max-acceleration
@@ -308,31 +302,13 @@ to-report avoid-obstacle-urge ;; turtle reporter
   report urge
 end
 
-
-to-report avoid-predator-urge ;; turtle reporter
-  let urge (list 0 0 0)
-  if c-avoid = 0 [ report urge ]
-  ;; report distance to the predator if can see
-  ask predators in-radius vision
-  [ set urge
-      add
-        urge
-        subtract
-          (list [xcor] of myself [ycor] of myself [zcor] of myself)
-          (list pxcor pycor pzcor)
-  ]
-  report urge
-end
-
 to find-flockmates  ;; turtle reporter
   ;; latch on to the nearby birds
   set flockmates other birds in-radius vision
 end
 
-
 to find-prey
-  set flockmates other birds in-radius pred-vision
-
+  set flockmates other birds in-radius vision
 end
 
 to fall ;; dead-bird procedure
@@ -417,6 +393,21 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
+SLIDER
+0
+0
+0
+0
+NIL
+NIL
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
+
 BUTTON
 107
 67
@@ -460,7 +451,7 @@ population
 population
 0
 500
-100.0
+350.0
 1
 1
 NIL
@@ -699,36 +690,6 @@ hawk
 0
 200
 1.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-386
-236
-558
-269
-pred-vision
-pred-vision
-0
-100
-11.5
-0.5
-1
-NIL
-HORIZONTAL
-
-SLIDER
-401
-130
-573
-163
-c-avoid
-c-avoid
-0
-1000
-1000.0
 1
 1
 NIL
