@@ -12,8 +12,8 @@ birds-own [
 
 
 predators-own [
-  ;; flockmates         ;; agentset of nearby turtles
-  ;; nearest-neighbor   ;; closest one of our flockmates
+  flockmates         ;; agentset of nearby turtles
+  nearest-neighbor   ;; closest one of our flockmates
   velocity           ;; vector with x y and z components it is determined by the previous velocity
                      ;; and the current acceleration at each step
   acceleration       ;; vector with x y and z components, determined by the six urges
@@ -34,7 +34,6 @@ to setup
       set color yellow + 2 - random-float 6
       set flockmates no-turtles
     ]
-  ;; ask turtle 0 [ set color red ]
 
   ;; Create predator
   create-predators hawk
@@ -103,6 +102,8 @@ to flock  ;; bird procedure
   add-urge world-center-urge world-center-constant
   add-urge wander-urge wander-constant
   add-urge avoid-obstacle-urge avoidance-constant
+  ;; Avoid predator
+  add-urge avoid-predator-urge c-avoid
 
   ;; if I'm not in a flock ignore the flock related
   ;; urges
@@ -139,16 +140,19 @@ end
 ;; Predator
 to predator-fly  ;; predator procedure
 
+  ;; find prey
+  find-prey
+
   add-urge world-center-urge world-center-constant
   add-urge wander-urge wander-constant
   add-urge avoid-obstacle-urge avoidance-constant
 
   ;; if I'm not in a flock ignore the flock related
   ;; urges
-  ;;if count flockmates > 0
-  ;;[ add-urge spacing-urge spacing-constant
-    ;;add-urge center-urge center-constant
-    ;;add-urge velocity-urge velocity-constant ]
+  if count flockmates > 0
+  [ add-urge spacing-urge spacing-constant
+    add-urge center-urge center-constant
+    add-urge velocity-urge velocity-constant ]
 
   ;; keep the acceleration within the accepted range
   if magnitude acceleration > max-acceleration
@@ -257,7 +261,28 @@ to-report avoid-obstacle-urge ;; turtle reporter
   report urge
 end
 
+
+to-report avoid-predator-urge ;; turtle reporter
+  let urge (list 0 0 0)
+  if c-avoid = 0 [ report urge ]
+  ;; report distance to the predator if can see
+  ask predators in-radius vision
+  [ set urge
+      add
+        urge
+        subtract
+          (list [xcor] of myself [ycor] of myself [zcor] of myself)
+          (list pxcor pycor pzcor)
+  ]
+  report urge
+end
+
 to find-flockmates  ;; turtle reporter
+  ;; latch on to the nearby birds
+  set flockmates other birds in-radius vision
+end
+
+to find-prey  ;; turtle reporter
   ;; latch on to the nearby birds
   set flockmates other birds in-radius vision
 end
@@ -387,7 +412,7 @@ population
 population
 0
 500
-253.0
+100.0
 1
 1
 NIL
@@ -626,6 +651,21 @@ hawk
 0
 1
 1.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+401
+130
+573
+163
+c-avoid
+c-avoid
+0
+1000
+1000.0
 1
 1
 NIL
