@@ -28,7 +28,7 @@ to setup
   create-birds population
     [
       place-bird
-      set size 0.75
+      set size 0.5
       set velocity [ 0 0 0 ]
       set acceleration [ 0 0 0 ]
       set color yellow + 2 - random-float 6
