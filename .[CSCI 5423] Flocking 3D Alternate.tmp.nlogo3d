@@ -308,7 +308,7 @@ to find-flockmates  ;; turtle reporter
 end
 
 to find-prey
-  set flockmates other birds in-radius pred-vision
+  set flockmates other birds in-radius vision
 end
 
 to fall ;; dead-bird procedure
@@ -392,6 +392,21 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+SLIDER
+0
+0
+0
+0
+NIL
+NIL
+0
+100
+50.0
+1
+1
+NIL
+HORIZONTAL
 
 BUTTON
 107
@@ -676,21 +691,6 @@ hawk
 200
 1.0
 1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-386
-236
-558
-269
-pred-vision
-pred-vision
-0
-100
-11.5
-0.5
 1
 NIL
 HORIZONTAL
