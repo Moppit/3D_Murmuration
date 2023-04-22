@@ -311,15 +311,21 @@ end
 
 to-report avoid-predator-urge ;; turtle reporter
   let urge (list 0 0 0)
+  let pred predator population ;; Find the turtle #, which for 1 predator, is the # of prey
+  let omega 0.2
   if c-avoid = 0 [ report urge ]
   ;; report distance to the predator if can see
+  ;; equation: c-avoid * (1/1+exp[w(|xp-xi|-R)]) * xpi
   ask predators in-radius vision
-  [ set urge
-      add
-        urge
-        subtract
-          (list [xcor] of myself [ycor] of myself [zcor] of myself)
-          (list pxcor pycor pzcor)
+  [
+    set urge
+      scale
+        c-avoid
+        add
+          urge
+          subtract
+            (list [xcor] of myself [ycor] of myself [zcor] of myself)
+            (list [xcor] of pred [ycor] of pred [zcor] of pred)
   ]
   report urge
 end
@@ -460,7 +466,7 @@ population
 population
 0
 500
-100.0
+300.0
 1
 1
 NIL
@@ -705,10 +711,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-386
-236
-558
-269
+400
+172
+572
+205
 pred-vision
 pred-vision
 0
@@ -720,19 +726,52 @@ NIL
 HORIZONTAL
 
 SLIDER
-401
-130
-573
-163
+400
+124
+572
+157
 c-avoid
 c-avoid
 0
 1000
-1000.0
+6.0
 1
 1
 NIL
 HORIZONTAL
+
+INPUTBOX
+401
+225
+550
+285
+predation-risk-Rx
+1.0
+1
+0
+Number
+
+INPUTBOX
+401
+286
+630
+346
+predation-risk-Ry
+1.0
+1
+0
+Number
+
+INPUTBOX
+401
+346
+630
+406
+predation-risk-Rz
+1.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
