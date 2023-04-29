@@ -89,7 +89,9 @@ to go
   tick
 
   ask predators
-  [ predator-fly ]
+  [
+    predator-fly
+  ]
 end
 
 to flock  ;; bird procedure
@@ -153,7 +155,7 @@ to predator-fly  ;; predator procedure
   ;; urges
   if count flockmates > 0
 
-  [ ;;add-urge pred-spacing-urge spacing-constant
+  [
     add-urge center-urge center-constant
     add-urge pred-velocity-urge velocity-constant
     pred-find-flock-center
@@ -250,22 +252,6 @@ to-report spacing-urge ;; turtle reporter
   report urge
 end
 
-to-report pred-spacing-urge
-  let urge [ 0 0 0 ]
-  ask flockmates with [ distance myself < cruise-distance ] [
-    set urge
-      add
-        urge
-        (subtract
-          (list [xcor] of myself [ycor] of myself [zcor] of myself)
-          (list xcor ycor zcor))
-  ]
-  ;; when vertical spacing is not on ignore the
-  ;; z component of the spacing urge.
-  if not vertical-spacing? [ set urge lput 0 but-last urge ]
-  report urge
-end
-
 to-report pred-velocity-urge ;; predator reporter
   ;; report the average difference in velocity
   ;; from my flock mates
@@ -318,14 +304,36 @@ to-report avoid-predator-urge ;; turtle reporter
   ;; equation: c-avoid * (1/1+exp[w(|xp-xi|-R)]) * xpi
   ask predators in-radius vision
   [
+    ;; Get vectors
+    let boid-vect (list [xcor] of myself [ycor] of myself [zcor] of myself)
+    let pred-vect (list [xcor] of pred [ycor] of pred [zcor] of pred)
+
+    ;; Calculate magnitude of distance
+    let dist (list 0 0 0)
+    set dist
+      magnitude
+        subtract
+          boid-vect
+          pred-vect
+
+    ;; Get whether boid is in the predator's vision (risk region R)
+    let risk-region 0; ;; I guess its 1 or 0 depending on distance?
+    ask predators [
+      ask birds in-cone 3 60
+      [ set risk-region 1 ]
+    ]
+
+    let risk ( 1 / ( 1 + (exp (omega * (dist - risk-region) ) ) ) )
+
+    ;; Set urge
     set urge
       scale
-        c-avoid
-        add
+        (c-avoid * risk)
+        add ;; this is the 0 vector + xpi
           urge
-          subtract
-            (list [xcor] of myself [ycor] of myself [zcor] of myself)
-            (list [xcor] of pred [ycor] of pred [zcor] of pred)
+          subtract ;; this is xpi
+            boid-vect
+            pred-vect
   ]
   report urge
 end
@@ -466,7 +474,7 @@ population
 population
 0
 500
-300.0
+250.0
 1
 1
 NIL
@@ -703,7 +711,7 @@ SLIDER
 hawk
 hawk
 0
-200
+1
 1.0
 1
 1
@@ -719,7 +727,7 @@ pred-vision
 pred-vision
 0
 100
-11.5
+4.0
 0.5
 1
 NIL
@@ -734,7 +742,7 @@ c-avoid
 c-avoid
 0
 1000
-6.0
+115.0
 1
 1
 NIL
