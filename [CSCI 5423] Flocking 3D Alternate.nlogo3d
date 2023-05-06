@@ -35,6 +35,17 @@ to setup
       set flockmates no-turtles
     ]
 
+
+
+  ;; checkered floor
+  ask patches
+    with [ pzcor = min-pzcor ]
+      [ set pcolor 3 + green + ( pxcor + pycor ) mod 2 ]
+
+  reset-ticks
+end
+
+to setup-predator
   ;; Create predator
   create-predators hawk
   [
@@ -43,15 +54,9 @@ to setup
     set velocity [ 0 0 0 ]
     set acceleration [ 0 0 0 ]
     set color red
+    setxyz 0 0 60
     set flockmates no-turtles
   ]
-
-  ;; checkered floor
-  ask patches
-    with [ pzcor = min-pzcor ]
-      [ set pcolor 3 + green + ( pxcor + pycor ) mod 2 ]
-
-  reset-ticks
 end
 
 to place-bird ;; turtle procedure
@@ -88,6 +93,9 @@ to go
     [ fall ]
   tick
 
+end
+
+to go-predator
   ask predators
   [
     predator-fly
@@ -149,7 +157,7 @@ to predator-fly  ;; predator procedure
 
   add-urge world-center-urge world-center-constant
   add-urge wander-urge wander-constant
-  add-urge avoid-obstacle-urge avoidance-constant
+  ;; add-urge avoid-obstacle-urge avoidance-constant
 
   ;; if I'm not in a flock ignore the flock related
   ;; urges
@@ -183,7 +191,7 @@ to predator-fly  ;; predator procedure
   let nxcor xcor + ( item 0 velocity )
   let nycor ycor + ( item 1 velocity )
   let nzcor zcor + ( item 2 velocity )
-  facexyz nxcor nycor nzcor
+  ;; facexyz nxcor nycor nzcor
   fd 0.1 * magnitude velocity
 end
 
@@ -272,8 +280,13 @@ to pred-find-flock-center ;; find center
   ;; report the average distance from my flockmates
   ;; in each direction
   if count flockmates > 0 or center-constant != 0[
-    facexyz mean [ xcor ] of flockmates mean [ ycor ] of flockmates mean [ zcor ] of flockmates
-]
+  ;; set target_z  max [ zcor ] of flockmates +50
+  let target_z ( (max [ zcor ] of flockmates) + 1000 )
+  let target_x ( (max [ xcor ] of flockmates)) ;;+ 10000000 )
+  let target_y ( (max [ ycor ] of flockmates)) ;; + 10000000 )
+    facexyz target_x target_y target_z
+  ]
+  ;;if distance ((mean [ xcor ] of flockmates mean [ ycor ] of flockmates max [ zcor ] of flockmates)) < 50 [backward 1]
 end
 
 
@@ -474,7 +487,7 @@ population
 population
 0
 500
-250.0
+300.0
 1
 1
 NIL
@@ -780,6 +793,40 @@ predation-risk-Rz
 1
 0
 Number
+
+BUTTON
+3
+67
+104
+100
+NIL
+setup-predator
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+289
+67
+398
+100
+NIL
+go-predator
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
