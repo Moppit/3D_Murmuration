@@ -296,7 +296,7 @@ to-report pred-find-flock-center
   ;; in each direction
   ;; if count birds > 100[ ;; or center-constant != 0[
   ;; set target_z  max [ zcor ] of flockmates +50
-  let target_z ( (min [ zcor ] of birds));; + 1000 )
+  let target_z ( (mean [ zcor ] of birds));; + 1000 )
   let target_x ( (mean [ xcor ] of birds)) ;;+ 10000000 )
   let target_y ( (mean [ ycor ] of birds)) ;; + 10000000 )
   facexyz target_x target_y target_z
@@ -518,7 +518,7 @@ population
 population
 0
 500
-78.0
+300.0
 1
 1
 NIL
