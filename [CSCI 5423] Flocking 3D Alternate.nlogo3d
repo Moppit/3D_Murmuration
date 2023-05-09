@@ -10,7 +10,9 @@ birds-own [
   acceleration       ;; vector with x y and z components, determined by the six urges
 ]
 
-
+globals [
+  isDive
+]
 predators-own [
   flockmates         ;; agentset of nearby turtles
   nearest-neighbor   ;; closest one of our flockmates
@@ -56,6 +58,7 @@ to setup-predator
     set color red
     setxyz 0 0 60
     set flockmates no-turtles
+    set isDive False
   ]
 end
 
@@ -150,14 +153,13 @@ end
 
 ;; Predator
 to predator-fly  ;; predator procedure
-  find-prey
 
-  ;; find prey
   find-prey
 
   add-urge world-center-urge world-center-constant
   add-urge wander-urge wander-constant
   ;; add-urge avoid-obstacle-urge avoidance-constant
+  pred-find-flock-center
 
   ;; if I'm not in a flock ignore the flock related
   ;; urges
@@ -166,7 +168,15 @@ to predator-fly  ;; predator procedure
   [
     add-urge center-urge center-constant
     add-urge pred-velocity-urge velocity-constant
-    pred-find-flock-center
+
+    if mean [ zcor ] of birds > zcor[
+      set isDive False
+    ]
+    if xcor = 0 and ycor = 0 and zcor = 60[
+      set isDive True
+    ]
+
+    pred-find-flock-center ;;dive attack behavior
   ]
 
 
@@ -191,7 +201,9 @@ to predator-fly  ;; predator procedure
   let nxcor xcor + ( item 0 velocity )
   let nycor ycor + ( item 1 velocity )
   let nzcor zcor + ( item 2 velocity )
-  ;; facexyz nxcor nycor nzcor
+
+
+  facexyz nxcor nycor nzcor
   fd 0.1 * magnitude velocity
 end
 
@@ -279,12 +291,16 @@ end
 to pred-find-flock-center ;; find center
   ;; report the average distance from my flockmates
   ;; in each direction
-  if count flockmates > 0 or center-constant != 0[
+  ;; if count birds > 100[ ;; or center-constant != 0[
   ;; set target_z  max [ zcor ] of flockmates +50
-  let target_z ( (max [ zcor ] of flockmates) + 1000 )
-  let target_x ( (max [ xcor ] of flockmates)) ;;+ 10000000 )
-  let target_y ( (max [ ycor ] of flockmates)) ;; + 10000000 )
-    facexyz target_x target_y target_z
+  if isDive = True[
+  let target_z ( (min [ zcor ] of birds) - 50);; + 1000 )
+  let target_x ( (max [ xcor ] of birds)) ;;+ 10000000 )
+  let target_y ( (max [ ycor ] of birds)) ;; + 10000000 )
+  facexyz target_x target_y target_z
+  ]
+  if isDive = False[
+  facexyz 0 0 60
   ]
   ;;if distance ((mean [ xcor ] of flockmates mean [ ycor ] of flockmates max [ zcor ] of flockmates)) < 50 [backward 1]
 end
