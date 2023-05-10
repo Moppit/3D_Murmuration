@@ -158,10 +158,10 @@ to predator-fly  ;; predator procedure
 
   ;;add-urge world-center-urge world-center-constant
   ;;add-urge wander-urge wander-constant
-  ;; add-urge avoid-obstacle-urge avoidance-constant
+  add-urge avoid-obstacle-urge avoidance-constant
 
-
-  if isDive = True and mean [ zcor ] of birds > zcor[
+  show min [ zcor ] of birds
+  if isDive = True and mean [zcor] of birds > zcor[
     set isDive False
     show "in past threshold"
   ]
@@ -549,7 +549,7 @@ population
 population
 0
 500
-78.0
+300.0
 1
 1
 NIL
@@ -564,7 +564,7 @@ vision
 vision
 0
 10
-1.5
+2.0
 0.1
 1
 NIL
@@ -594,7 +594,7 @@ world-center-constant
 world-center-constant
 0
 20
-10.0
+14.0
 1
 1
 NIL
@@ -719,10 +719,10 @@ vertical-spacing?
 -1000
 
 SLIDER
-103
-439
-275
-472
+97
+437
+269
+470
 avoidance-constant
 avoidance-constant
 0
@@ -802,22 +802,22 @@ pred-vision
 pred-vision
 0
 100
-4.0
+10.0
 0.5
 1
 NIL
 HORIZONTAL
 
 SLIDER
-456
-227
-628
-260
+457
+224
+629
+257
 c-avoid
 c-avoid
 0
 1000
-115.0
+70.0
 1
 1
 NIL
