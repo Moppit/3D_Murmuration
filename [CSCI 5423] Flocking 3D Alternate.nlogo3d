@@ -159,18 +159,28 @@ to predator-fly  ;; predator procedure
   ;;add-urge world-center-urge world-center-constant
   ;;add-urge wander-urge wander-constant
   ;; add-urge avoid-obstacle-urge avoidance-constant
-  add-urge pred-find-flock-center 1 ;; have to pass urge factor, not sure what that is
 
 
-  if mean [ zcor ] of birds > zcor[
+  if isDive = True and mean [ zcor ] of birds > zcor[
     set isDive False
-    set velocity [ 0 0 0 ]
-    setxyz 0 0 60
+    show "in past threshold"
   ]
-  if xcor = 0 and ycor = 0 and zcor = 60[
+  if isDive = False and zcor > 8 [
+    ;;setxyz 0 0 60
+    set velocity [ 0 0 0 ]
+    set acceleration [ 0 0 0 ]
     set isDive True
+    show "in reset before dive"
   ]
 
+  if isDive = True [
+    show "in find center"
+    add-urge pred-find-flock-center 1 ;; have to pass urge factor, not sure what that is
+  ]
+  if isDive = False [
+    show "in find start"
+    add-urge pred-find-start 1 ;; have to pass urge factor, not sure what that is
+  ]
 
   ;; if I'm not in a flock ignore the flock related
   ;; urges
@@ -291,12 +301,13 @@ to-report pred-velocity-urge ;; predator reporter
 
 end
 
+
 to-report pred-find-flock-center
   ;; report the average distance from my flockmates
   ;; in each direction
   ;; if count birds > 100[ ;; or center-constant != 0[
   ;; set target_z  max [ zcor ] of flockmates +50
-  let target_z ( (mean [ zcor ] of birds));; + 1000 )
+  let target_z ( (min [ zcor ] of birds));; + 1000 )
   let target_x ( (mean [ xcor ] of birds)) ;;+ 10000000 )
   let target_y ( (mean [ ycor ] of birds)) ;; + 10000000 )
   facexyz target_x target_y target_z
@@ -314,6 +325,26 @@ to-report pred-find-flock-center
         xcor
         ycor
         zcor )
+    )
+
+  report urge
+  ;;if distance ((mean [ xcor ] of flockmates mean [ ycor ] of flockmates max [ zcor ] of flockmates)) < 50 [backward 1]
+end
+
+to-report pred-find-start
+  ;; report the average distance from my flockmates
+  ;; in each direction
+  ;; if count birds > 100[ ;; or center-constant != 0[
+  ;; set target_z  max [ zcor ] of flockmates +50
+  facexyz 0 0 60
+
+  let urge (list 0 0 0)
+
+  set urge
+    ( map
+      [ [a b] -> a - b ]
+      (list 0 0 60 )
+      (list xcor ycor zcor )
     )
 
   report urge
@@ -518,7 +549,7 @@ population
 population
 0
 500
-300.0
+78.0
 1
 1
 NIL
