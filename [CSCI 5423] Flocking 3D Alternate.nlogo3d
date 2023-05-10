@@ -15,11 +15,8 @@ globals [
   waitTick
 ]
 predators-own [
-  flockmates         ;; agentset of nearby turtles
-  nearest-neighbor   ;; closest one of our flockmates
-  velocity           ;; vector with x y and z components it is determined by the previous velocity
-                     ;; and the current acceleration at each step
-  acceleration       ;; vector with x y and z components, determined by the six urges
+  velocity
+  acceleration
 ]
 
 ;;
@@ -38,8 +35,6 @@ to setup
       set flockmates no-turtles
     ]
 
-
-
   ;; checkered floor
   ask patches
     with [ pzcor = min-pzcor ]
@@ -52,27 +47,17 @@ to setup-predator
   ;; Create predator
   create-predators hawk
   [
-    place-predator
     set size 1
     set velocity [ 0 0 0 ]
     set acceleration [ 0 0 0 ]
     set color red
     setxyz 0 0 10
-    set flockmates no-turtles
     set isDive 1
     set waitTick 200
   ]
 end
 
 to place-bird ;; turtle procedure
-  setxyz random-xcor random-ycor random-zcor
-  ;; make sure that the birds are not on the floor or inside the
-  ;; any obstacles that have been created.
-  while [ pcolor != black ]
-  [ setxyz random-xcor random-ycor random-zcor ]
-end
-
-to place-predator ;; turtle procedure
   setxyz random-xcor random-ycor random-zcor
   ;; make sure that the birds are not on the floor or inside the
   ;; any obstacles that have been created.
@@ -156,38 +141,36 @@ end
 ;; Predator
 to predator-fly  ;; predator procedure
 
-  ;; find-prey
-
   ;; Decide if we need to change diving behavior
+
+  ;; Currently: diving. Next: find start.
   if isDive = 1 and mean [ zcor ] of birds > zcor[
     set isDive 0
   ]
+  ;; Currently: finding start. Next: wait
   if isDive = 0 and zcor > 8 [
     set velocity [ 0 0 0 ]
     set acceleration [ 0 0 0 ]
     set waitTick 0
     set isDive 2
   ]
-  if isDive = 2 and waitTick = 100 [ ;; adjust number based on desired wait
+  ;; Currently: waiting. Next: dive
+  if isDive = 2 and waitTick = 100 [
     set isDive 1
   ]
 
   ;; Act on the current diving behavior
   if isDive = 0 [
-    show "0"
     add-urge pred-find-start 1
   ]
   if isDive = 1 [
-    show "1"
     add-urge pred-find-flock-center 10
   ]
-  if isDive = 2 [ ;; we are in waiting mode
-    show "2"
-    show waitTick
+  if isDive = 2 [
     set waitTick (waitTick + 1)
     add-urge pred-wait-urge 1
-
   ]
+
 
   ;; keep the acceleration within the accepted range
   if magnitude acceleration > max-acceleration
@@ -281,22 +264,6 @@ to-report spacing-urge ;; turtle reporter
   report urge
 end
 
-to-report pred-velocity-urge ;; predator reporter
-  ;; report the average difference in velocity
-  ;; from my flock mates
-  if count flockmates = 0 or velocity-constant = 0
-  [ report (list 0 0 0) ]
-  report
-    ( map
-      [ [a b] -> a + b ]
-      (list
-        mean [ item 0 velocity ] of flockmates
-        mean [ item 1 velocity ] of flockmates
-        mean [ item 2 velocity ] of flockmates )
-      velocity )
-
-end
-
 
 to-report pred-find-flock-center
   let target_z ( (min [ zcor ] of birds))
@@ -308,26 +275,15 @@ to-report pred-find-flock-center
   set urge
     ( map
       [ [a b] -> a - b ]
-      (list
-        target_x
-        target_y
-        target_z )
-      (list
-        xcor
-        ycor
-        zcor )
+      (list target_x target_y target_z )
+      (list xcor ycor zcor )
     )
 
   report urge
-  ;;if distance ((mean [ xcor ] of flockmates mean [ ycor ] of flockmates max [ zcor ] of flockmates)) < 50 [backward 1]
 end
 
 to-report pred-find-start
-  ;; report the average distance from my flockmates
-  ;; in each direction
-  ;; if count birds > 100[ ;; or center-constant != 0[
-  ;; set target_z  max [ zcor ] of flockmates +50
-  facexyz 0 0 10
+  facexyz 0 0 9
 
   let urge (list 0 0 0)
 
@@ -339,11 +295,10 @@ to-report pred-find-start
     )
 
   report urge
-  ;;if distance ((mean [ xcor ] of flockmates mean [ ycor ] of flockmates max [ zcor ] of flockmates)) < 50 [backward 1]
 end
 
 to-report pred-wait-urge
-  facexyz 1 ycor zcor
+  facexyz 1 1 zcor
   report
     (map
       [ [a b] -> b - a ]
@@ -392,7 +347,7 @@ to-report avoid-predator-urge ;; turtle reporter
           pred-vect
 
     ;; Get whether boid is in the predator's vision (risk region R)
-    let risk-region 0; ;; I guess its 1 or 0 depending on distance?
+    let risk-region 0;
     ask predators [
       ask birds in-cone 3 60
       [ set risk-region 1 ]
@@ -416,11 +371,6 @@ end
 to find-flockmates  ;; turtle reporter
   ;; latch on to the nearby birds
   set flockmates other birds in-radius vision
-end
-
-
-to find-prey
-  set flockmates other birds in-radius pred-vision
 end
 
 to fall ;; dead-bird procedure
