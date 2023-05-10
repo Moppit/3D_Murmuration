@@ -12,6 +12,7 @@ birds-own [
 
 globals [
   isDive
+  waitTick
 ]
 predators-own [
   flockmates         ;; agentset of nearby turtles
@@ -56,9 +57,10 @@ to setup-predator
     set velocity [ 0 0 0 ]
     set acceleration [ 0 0 0 ]
     set color red
-    setxyz 0 0 60
+    setxyz 0 0 10
     set flockmates no-turtles
-    set isDive True
+    set isDive 1
+    set waitTick 200
   ]
 end
 
@@ -156,42 +158,36 @@ to predator-fly  ;; predator procedure
 
   ;; find-prey
 
-  ;;add-urge world-center-urge world-center-constant
-  ;;add-urge wander-urge wander-constant
-  add-urge avoid-obstacle-urge avoidance-constant
-
-  show min [ zcor ] of birds
-  if isDive = True and mean [zcor] of birds > zcor[
-    set isDive False
-    show "in past threshold"
+  ;; Decide if we need to change diving behavior
+  if isDive = 1 and mean [ zcor ] of birds > zcor[
+    set isDive 0
   ]
-  if isDive = False and zcor > 8 [
-    ;;setxyz 0 0 60
+  if isDive = 0 and zcor > 8 [
     set velocity [ 0 0 0 ]
     set acceleration [ 0 0 0 ]
-    set isDive True
-    show "in reset before dive"
+    set waitTick 0
+    set isDive 2
+  ]
+  if isDive = 2 and waitTick = 100 [ ;; adjust number based on desired wait
+    set isDive 1
   ]
 
-  if isDive = True [
-    show "in find center"
-    add-urge pred-find-flock-center 1 ;; have to pass urge factor, not sure what that is
+  ;; Act on the current diving behavior
+  if isDive = 0 [
+    show "0"
+    add-urge pred-find-start 1
   ]
-  if isDive = False [
-    show "in find start"
-    add-urge pred-find-start 1 ;; have to pass urge factor, not sure what that is
+  if isDive = 1 [
+    show "1"
+    add-urge pred-find-flock-center 10
   ]
+  if isDive = 2 [ ;; we are in waiting mode
+    show "2"
+    show waitTick
+    set waitTick (waitTick + 1)
+    add-urge pred-wait-urge 1
 
-  ;; if I'm not in a flock ignore the flock related
-  ;; urges
-  ;; if count flockmates > 0
-  ;;if count flockmates > 0
-  ;;[
-    ;;add-urge center-urge center-constant
-    ;;add-urge pred-velocity-urge velocity-constant
-
-    ;;pred-find-flock-center ;;dive attack behavior
-  ;;]
+  ]
 
   ;; keep the acceleration within the accepted range
   if magnitude acceleration > max-acceleration
@@ -303,14 +299,9 @@ end
 
 
 to-report pred-find-flock-center
-  ;; report the average distance from my flockmates
-  ;; in each direction
-  ;; if count birds > 100[ ;; or center-constant != 0[
-  ;; set target_z  max [ zcor ] of flockmates +50
-  let target_z ( (min [ zcor ] of birds));; + 1000 )
-  let target_x ( (mean [ xcor ] of birds)) ;;+ 10000000 )
-  let target_y ( (mean [ ycor ] of birds)) ;; + 10000000 )
-  facexyz target_x target_y target_z
+  let target_z ( (min [ zcor ] of birds))
+  let target_x ( (mean [ xcor ] of birds))
+  let target_y ( (mean [ ycor ] of birds))
 
   let urge (list 0 0 0)
 
@@ -336,19 +327,28 @@ to-report pred-find-start
   ;; in each direction
   ;; if count birds > 100[ ;; or center-constant != 0[
   ;; set target_z  max [ zcor ] of flockmates +50
-  facexyz 0 0 60
+  facexyz 0 0 10
 
   let urge (list 0 0 0)
 
   set urge
     ( map
       [ [a b] -> a - b ]
-      (list 0 0 60 )
+      (list 0 0 10 )
       (list xcor ycor zcor )
     )
 
   report urge
   ;;if distance ((mean [ xcor ] of flockmates mean [ ycor ] of flockmates max [ zcor ] of flockmates)) < 50 [backward 1]
+end
+
+to-report pred-wait-urge
+  facexyz 1 ycor zcor
+  report
+    (map
+      [ [a b] -> b - a ]
+      (list xcor ycor zcor)
+      (list 0 0 9 ))
 end
 
 
@@ -421,7 +421,6 @@ end
 
 to find-prey
   set flockmates other birds in-radius pred-vision
-
 end
 
 to fall ;; dead-bird procedure
@@ -549,7 +548,7 @@ population
 population
 0
 500
-300.0
+78.0
 1
 1
 NIL
@@ -564,7 +563,7 @@ vision
 vision
 0
 10
-2.0
+1.5
 0.1
 1
 NIL
@@ -594,7 +593,7 @@ world-center-constant
 world-center-constant
 0
 20
-14.0
+10.0
 1
 1
 NIL
@@ -719,10 +718,10 @@ vertical-spacing?
 -1000
 
 SLIDER
-97
-437
-269
-470
+103
+439
+275
+472
 avoidance-constant
 avoidance-constant
 0
@@ -802,22 +801,22 @@ pred-vision
 pred-vision
 0
 100
-10.0
+4.0
 0.5
 1
 NIL
 HORIZONTAL
 
 SLIDER
-457
-224
-629
-257
+456
+227
+628
+260
 c-avoid
 c-avoid
 0
 1000
-70.0
+115.0
 1
 1
 NIL
